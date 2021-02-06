@@ -21,13 +21,13 @@ const RegisterScreen = ({ navigation }) => {
   }, [navigation]);
 
   const register = () => {
-    console.log('imageUrl: ', imageUrl);
+    // console.log('imageUrl: ', imageUrl);
 
     setLoading(true);
     auth
       .createUserWithEmailAndPassword(email, password)
       .then((authUser) => {
-        console.log("authUser: ", authUser);
+        // console.log("authUser: ", authUser);
         setLoading(false);
 
         authUser.user.updateProfile({

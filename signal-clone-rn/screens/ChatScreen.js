@@ -17,6 +17,7 @@ import * as firebase from "firebase";
 
 const ChatScreen = ({ navigation, route }) => {
   const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
 
   useLayoutEffect(() => {
     navigation.setOptions({
@@ -30,6 +31,7 @@ const ChatScreen = ({ navigation, route }) => {
               rounded
               source={{
                 uri:
+                  messages[0]?.data.photoURL ||
                   "https://cdn.pixabay.com/photo/2014/04/03/10/32/businessman-310819_1280.png",
               }}
             />
@@ -69,7 +71,7 @@ const ChatScreen = ({ navigation, route }) => {
         );
       },
     });
-  }, [navigation]);
+  }, [navigation, messages]);
 
   const sendMessage = () => {
     Keyboard.dismiss();
@@ -88,6 +90,21 @@ const ChatScreen = ({ navigation, route }) => {
     setInput("");
   };
 
+  useLayoutEffect(() => {
+    const unsubscribe = db
+      .collection("signalchats")
+      .doc(route.params.id)
+      .collection("messages")
+      .orderBy("timestamp", "desc")
+      .onSnapshot((snapshot) =>
+        setMessages(
+          snapshot.docs.map((doc) => ({ id: doc.id, data: doc.data() }))
+        )
+      );
+
+    return unsubscribe;
+  }, [route]);
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
       <StatusBar style="light" />
@@ -99,7 +116,52 @@ const ChatScreen = ({ navigation, route }) => {
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <>
-            <ScrollView></ScrollView>
+            <ScrollView contentContainerStyle={{ paddingTop: 15, paddingHorizontal: 10 }}>
+              {messages.map(({ id, data }) => {
+                if (data.email === auth.currentUser.email) {
+                  return (
+                    <View key={id} style={styles.receiver}>
+                      <Avatar
+                        source={{ uri: data.photoURL }}
+                        rounded
+                        size={30}
+                        position="absolute"
+                        bottom={-15}
+                        right={-5}
+                        // web
+                        containerStyle={{
+                          position: "absolute",
+                          bottom: -15,
+                          right: -5,
+                        }}
+                      />
+                      <Text style={styles.receivedText}>{data.message}</Text>
+                    </View>
+                  );
+                } else {
+                  return (
+                    <View key={id} style={styles.sender}>
+                      <Avatar
+                        source={{ uri: data.photoURL }}
+                        rounded
+                        size={30}
+                        position="absolute"
+                        bottom={-15}
+                        left={-5}
+                        // web
+                        containerStyle={{
+                          position: "absolute",
+                          bottom: -15,
+                          left: -5,
+                        }}
+                      />
+                      <Text style={styles.senderText}>{data.message}</Text>
+                      <Text style={styles.senderName}>{data.displayName}</Text>
+                    </View>
+                  );
+                }
+              })}
+            </ScrollView>
             <View style={styles.footer}>
               <TextInput
                 value={input}
@@ -140,5 +202,42 @@ const styles = StyleSheet.create({
     color: "grey",
     padding: 10,
     borderRadius: 30,
+  },
+  receivedText: {
+    marginLeft: 10,
+    fontWeight: "500",
+    color: "#333",
+  },
+  senderText: {
+    marginLeft: 10,
+    marginBottom: 15,
+    fontWeight: "500",
+    color: "#fff",
+  },
+  senderName: {
+    left: 10,
+    paddingRight: 10,
+    fontSize: 10,
+    color: "#fff",
+  },
+  receiver: {
+    padding: 15,
+    backgroundColor: "#ECECEC",
+    alignSelf: "flex-end",
+    borderRadius: 20,
+    marginRight: 15,
+    marginBottom: 20,
+    maxWidth: "80%",
+    position: "relative",
+  },
+  sender: {
+    padding: 15,
+    backgroundColor: "#2B68E6",
+    alignSelf: "flex-start",
+    borderRadius: 20,
+    marginRight: 15,
+    marginBottom: 20,
+    maxWidth: "80%",
+    position: "relative",
   },
 });

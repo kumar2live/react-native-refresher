@@ -101,7 +101,7 @@ const HomeScreen = ({ navigation }) => {
           );
         })}
 
-        <Button onPress={() => auth.signOut()} title="Sign Out" />
+        <Button onPress={signOutUser} title="Sign Out" />
       </ScrollView>
     </SafeAreaView>
   );
